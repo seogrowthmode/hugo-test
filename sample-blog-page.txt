@@ -1,0 +1,62 @@
+import { getPaginatedPosts } from "./actions"
+import { PageHeader } from "@/components/page-header"
+import { BlogPosts } from "@/components/blog-posts"
+import { Suspense } from "react"
+import { Spinner } from "@/components/ui/spinner"
+import { schemaConfig } from "@/lib/schema-config"
+import { BreadcrumbSchema } from "@/components/schema/breadcrumb-schema"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Blog | Kercher Electric LLC",
+  description: "Read our latest blog posts and articles about electrical services, home electrical systems, and energy efficiency.",
+  keywords: "blog, articles, electrical services, electrical safety, energy efficiency, home electrical systems, commercial electrical, electrical tips",
+  alternates: {
+    canonical: `${schemaConfig.seo.baseUrl}/blog`,
+  },
+  openGraph: {
+    title: "Blog | Kercher Electric LLC",
+    description: "Read our latest blog posts and articles about electrical services, home electrical systems, and energy efficiency.",
+    type: "website",
+    locale: "en_US",
+    siteName: "Kercher Electric LLC",
+    url: `${schemaConfig.seo.baseUrl}/blog`,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog | Kercher Electric LLC",
+    description: "Read our latest blog posts and articles about electrical services, home electrical systems, and energy efficiency.",
+  },
+}
+
+export default async function BlogPage() {
+  const { posts, totalPages } = await getPaginatedPosts(1)
+
+  return (
+    <div>
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", item: "/" },
+          { name: "Blog", item: "/blog" }
+        ]}
+      />
+      <PageHeader
+        title="Blog"
+        description="Read our latest blog posts and articles about electrical services, home electrical systems, and energy efficiency."
+        breadcrumbs={[
+          { name: "Home", href: "/" },
+          { name: "Blog", href: "/blog", isCurrent: true }
+        ]}
+      />
+      <Suspense fallback={
+        <div className="container py-12 flex items-center justify-center min-h-[200px]">
+          <Spinner />
+        </div>
+      }>
+        <div className="py-12">
+          <BlogPosts initialPosts={posts} initialTotalPages={totalPages} />
+        </div>
+      </Suspense>
+    </div>
+  )
+}

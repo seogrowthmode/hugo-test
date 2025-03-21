@@ -1,0 +1,243 @@
+import fs from 'fs'
+import path from 'path'
+import matter from 'gray-matter'
+
+import MarkdownIt from 'markdown-it'
+import slugify from 'slugify'
+
+const md = new MarkdownIt({
+  html: true,
+  breaks: true,
+  linkify: true,
+})
+
+// Add IDs to headings
+md.renderer.rules.heading_open = function (tokens, idx, options, env, self) {
+  const token = tokens[idx]
+  const title = tokens[idx + 1].content
+  const slug = slugify(title, { lower: true, strict: true })
+  token.attrSet('id', slug)
+  return self.renderToken(tokens, idx, options)
+}
+
+// Process image paths in markdown content
+const defaultImageRenderer = md.renderer.rules.image || function(tokens, idx, options, env, self) {
+  return self.renderToken(tokens, idx, options)
+}
+
+md.renderer.rules.image = function(tokens, idx, options, env, self) {
+  const token = tokens[idx]
+  const srcIndex = token.attrIndex('src')
+  
+  if (srcIndex >= 0 && token.attrs) {
+    let src = token.attrs[srcIndex][1]
+    
+    // Handle various image path formats
+    if (src.startsWith('images/')) {
+      // If path starts with images/, extract the filename and prepend /blog/
+      const filename = src.replace('images/', '')
+      token.attrs[srcIndex][1] = `/blog/${filename}`
+    } else if (!src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:')) {
+      // If it's a relative path but doesn't start with images/, still prepend /blog/
+      token.attrs[srcIndex][1] = `/blog/${src}`
+    }
+  }
+  
+  return defaultImageRenderer(tokens, idx, options, env, self)
+}
+
+// Function to process HTML content and fix image paths
+function processHtmlContent(html: string): string {
+  // Replace image paths in the rendered HTML content
+  return html.replace(
+    /<img([^>]*)src=["'](images\/([^"']*))["']([^>]*)>/g, 
+    '<img$1src="/blog/$3"$4>'
+  );
+}
+
+// Function to extract the first image from markdown content
+function extractFirstImageFromContent(content: string): string | null {
+  // Match Markdown image syntax: ![alt text](image-path)
+  const imageRegex = /!\[.*?\]\((.*?)\)/;
+  const match = content.match(imageRegex);
+  
+  if (match && match[1]) {
+    let imagePath = match[1];
+    
+    // Handle various image path formats (similar to existing image processing logic)
+    if (imagePath.startsWith('images/')) {
+      const filename = imagePath.replace('images/', '');
+      return `/blog/${filename}`;
+    } else if (!imagePath.startsWith('http') && !imagePath.startsWith('/') && !imagePath.startsWith('data:')) {
+      return `/blog/${imagePath}`;
+    }
+    
+    return imagePath;
+  }
+  
+  return null;
+}
+
+// Function to extract headings from markdown content
+function extractHeadings(content: string) {
+  const headings: Array<{ text: string; level: number; id: string }> = []
+  const tokens = md.parse(content, {})
+
+  tokens.forEach((token, idx) => {
+    if (token.type === 'heading_open') {
+      const level = parseInt(token.tag.slice(1))
+      const text = tokens[idx + 1].content
+      const id = slugify(text, { lower: true, strict: true })
+      headings.push({ text, level, id })
+    }
+  })
+
+  return headings
+}
+
+const postsDirectory = path.join(process.cwd(), 'src/content/blog')
+
+export interface BlogPost {
+  slug: string
+  title: string
+  date: string
+  author: string
+  excerpt: string
+  description: string // Short description for blog cards
+  content: string
+  headings: Array<{ text: string; level: number; id: string }>
+  image?: string
+  categories?: string[]
+  tags?: string[]
+}
+
+export async function getAllPosts(page?: number, postsPerPage?: number): Promise<BlogPost[]> {
+  const fileNames = await fs.promises.readdir(postsDirectory)
+  const allPosts = await Promise.all(
+    fileNames
+      .filter((fileName) => fileName.endsWith('.md'))
+      .map(async (fileName) => {
+        const slug = fileName.replace(/\.md$/, '')
+        const fullPath = path.join(postsDirectory, fileName)
+        const fileContents = await fs.promises.readFile(fullPath, 'utf8')
+        const { data, content } = matter(fileContents)
+        const headings = extractHeadings(content)
+
+        // Handle both image and coverImage attributes
+        let imageUrl = data.image || data.coverImage;
+        
+        // If no image is specified in frontmatter, try to extract from content
+        if (!imageUrl) {
+          imageUrl = extractFirstImageFromContent(content) || "/image-placeholder.jpg";
+        } else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+          // If image exists and doesn't start with http or /, prepend /blog/
+          imageUrl = `/blog/${imageUrl}`
+        }
+
+        // Render markdown content and process HTML to fix image paths
+        const renderedContent = md.render(content)
+        const processedContent = processHtmlContent(renderedContent)
+
+        // Extract a short description from the content (first 150 characters)
+        // Skip any image markdown at the beginning and remove markdown formatting
+        const contentWithoutImages = content.replace(/!\[.*?\]\(.*?\)/g, '').trim()
+        const firstParagraph = contentWithoutImages.split('\n\n')[0]
+        
+        // Remove markdown formatting characters
+        const plainText = firstParagraph
+          .replace(/\*\*(.*?)\*\*/g, '$1') // Bold
+          .replace(/\*(.*?)\*/g, '$1')     // Italic
+          .replace(/`(.*?)`/g, '$1')       // Code
+          .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Links
+          .replace(/#{1,6}\s+/g, '')       // Headings
+          
+        const shortDescription = plainText.substring(0, 150).trim()
+        const description = shortDescription + (shortDescription.length >= 150 ? '...' : '')
+
+        return {
+          slug,
+          title: data.title,
+          date: data.date,
+          author: data.author || "Matt Kercher", // Default to Matt Kercher if no author specified
+          excerpt: data.excerpt || "",
+          description: description,
+          content: processedContent,
+          headings,
+          image: imageUrl,
+          categories: data.categories || [],
+          tags: data.tags || [],
+        }
+      })
+  )
+
+  const sortedPosts = allPosts.sort((a, b) => (a.date < b.date ? 1 : -1))
+
+  if (page !== undefined && postsPerPage !== undefined) {
+    const start = (page - 1) * postsPerPage
+    const end = start + postsPerPage
+    return sortedPosts.slice(start, end)
+  }
+
+  return sortedPosts
+}
+
+export async function getTotalPages(postsPerPage: number): Promise<number> {
+  const posts = await getAllPosts()
+  return Math.ceil(posts.length / postsPerPage)
+}
+
+export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  try {
+    const fullPath = path.join(postsDirectory, `${slug}.md`)
+    const fileContents = await fs.promises.readFile(fullPath, 'utf8')
+    const { data, content } = matter(fileContents)
+    const headings = extractHeadings(content)
+
+    // Handle both image and coverImage attributes
+    let imageUrl = data.image || data.coverImage;
+    
+    // If no image is specified in frontmatter, try to extract from content
+    if (!imageUrl) {
+      imageUrl = extractFirstImageFromContent(content) || "/image-placeholder.jpg";
+    } else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('/')) {
+      // If image exists and doesn't start with http or /, prepend /blog/
+      imageUrl = `/blog/${imageUrl}`
+    }
+
+    // Render markdown content and process HTML to fix image paths
+    const renderedContent = md.render(content)
+    const processedContent = processHtmlContent(renderedContent)
+
+        // Extract a short description from the content (first 150 characters)
+        // Skip any image markdown at the beginning and remove markdown formatting
+        const contentWithoutImages = content.replace(/!\[.*?\]\(.*?\)/g, '').trim()
+        const firstParagraph = contentWithoutImages.split('\n\n')[0]
+        
+        // Remove markdown formatting characters
+        const plainText = firstParagraph
+          .replace(/\*\*(.*?)\*\*/g, '$1') // Bold
+          .replace(/\*(.*?)\*/g, '$1')     // Italic
+          .replace(/`(.*?)`/g, '$1')       // Code
+          .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Links
+          .replace(/#{1,6}\s+/g, '')       // Headings
+          
+        const shortDescription = plainText.substring(0, 150).trim()
+        const description = shortDescription + (shortDescription.length >= 150 ? '...' : '')
+
+    return {
+      slug,
+      title: data.title,
+      date: data.date,
+      author: data.author || "Matt Kercher", // Default to Matt Kercher if no author specified
+      excerpt: data.excerpt || "",
+      description: description,
+      content: processedContent,
+      headings,
+      image: imageUrl,
+      categories: data.categories || [],
+      tags: data.tags || [],
+    }
+  } catch {
+    return null
+  }
+}

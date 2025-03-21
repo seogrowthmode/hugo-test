@@ -1,0 +1,138 @@
+# Security
+
+## Sensitive Files
+DO NOT read or modify:
+- .env files
+- **/config/secrets.*
+- **/*.pem
+- Any file containing API keys, tokens, or credentials
+
+## Security Practices
+- Never commit sensitive files
+- Use environment variables for secrets
+- Keep credentials out of logs and output
+
+# Tech Stack
+
+## Core Dependencies
+- Next.js 14.x
+- React 18.x
+- TypeScript 5.x
+- Node.js 20.x or higher
+
+## UI Libraries
+- Tailwind CSS 3.x
+- Radix UI components
+- shadcn/ui components
+- Lucide React icons
+
+## Content Management
+- Markdown with gray-matter for blog content
+- markdown-it for MD parsing
+
+# Code Style & Standards
+
+## TypeScript
+- Strict mode enabled
+- Use ES2017 target
+- Follow tsconfig paths aliases (@/* for src directory)
+- No JavaScript files (.js/.jsx) - TypeScript only
+
+## ESLint
+- Extend Next.js core web vitals
+- Follow Next.js TypeScript rules
+- Run linting before commits
+
+## Component Structure
+- Use .tsx extension for all React components
+- Follow Next.js 14 App Router conventions
+- Keep components in src/components directory
+- UI components in src/components/ui
+- Page components in src/app directory
+
+## Styling
+- Use Tailwind CSS for styling
+- Follow design system color tokens (see tailwind.config.ts)
+- Use CSS variables for theme values
+- Maintain responsive design (mobile-first)
+- Use container queries where appropriate
+
+# Architecture Guidelines
+
+## File Organization
+- /src/app - Next.js pages and routes
+- /src/components - Reusable React components
+- /src/content - Markdown content
+- /src/lib - Utility functions and helpers
+- /public - Static assets
+
+## Component Guidelines
+- Use functional components with TypeScript
+- Implement proper prop typing
+- Keep components focused and single-responsibility
+- Use composition over inheritance
+- Implement error boundaries where necessary
+- Create modular, reusable components
+- Break down complex components into smaller, manageable pieces
+- Follow the Single Responsibility Principle
+- Ensure components are self-contained and independent
+- Use props and interfaces to define clear component contracts
+
+## State Management
+- Use React hooks for local state
+- Implement proper data fetching patterns
+- Follow Next.js data fetching best practices
+- Use server components where possible
+
+# Performance & Best Practices
+
+## Build Optimization
+- Implement proper image optimization
+- Use Next.js built-in performance features
+- Minimize bundle size
+- Implement proper code splitting
+
+## Accessibility
+- Follow WCAG guidelines
+- Use semantic HTML
+- Implement proper ARIA attributes
+- Ensure keyboard navigation
+- Maintain proper color contrast
+
+## SEO
+- Implement proper meta tags
+- Use semantic HTML structure
+- Follow Next.js SEO best practices
+- Implement proper Open Graph tags
+
+# Development Workflow
+
+## Version Control
+- Use descriptive commit messages
+- Follow conventional commits format
+- Keep PRs focused and manageable
+- Review code before merging
+
+## Testing
+- Write unit tests for components
+- Test accessibility
+- Test responsive design
+- Verify performance metrics
+
+## Documentation
+- Document complex components
+- Maintain README.md
+- Document API endpoints
+- Include JSDoc comments for complex functions
+
+## Package Management
+- Use npm as package manager
+- Keep dependencies updated
+- Avoid conflicting package versions
+- Document any specific version requirements
+
+## Pre-Change Checks
+- Review existing project files before making changes
+- Understand the current implementation and architecture
+- Check for dependencies and potential impacts
+- Verify compatibility with existing code patterns

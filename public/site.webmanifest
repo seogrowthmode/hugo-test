@@ -1,0 +1,16 @@
+{
+  "name": "Chadix",
+  "short_name": "Chadix",
+  "description": "Modern Web Solutions for Growing Businesses",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0F172A",
+  "icons": [
+    {
+      "src": "/next.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml"
+    }
+  ]
+}
