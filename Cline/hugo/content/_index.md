@@ -73,7 +73,6 @@ testimonials:
     title="Feature 1 Title"
     description="Feature 1 Text Placeholder"
     image="/images/feature-1.svg" 
-    # Removed badge, button, features list for simplicity based on wireframe
 >}}
 {{< feature
     title="Feature 2 Title"
@@ -106,12 +105,7 @@ testimonials:
 <!-- 7. Primary Call to Action Section -->
 ## Primary Call to Action Headline Placeholder
 <!-- Using existing CTA shortcode, might need parameter adjustments -->
-{{< cta 
-    headline="Ready to Get Started?" 
-    sub_headline="Risk Reducer Text Placeholder" 
-    primary_button_text="Primary CTA Btn Placeholder" 
-    primary_button_url="#" 
->}}
+{{/* {{< cta >}} */}} <!-- Temporarily commented out for debugging -->
 
 <!-- 8. FAQ Section -->
 ## FAQ Headline Placeholder
