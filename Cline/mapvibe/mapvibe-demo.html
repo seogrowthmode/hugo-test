@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapVibe Jobs Demo</title>
+    <style>
+        :root {
+            --global-palette1: #377dff;
+            --global-palette3: #333333;
+            --global-palette4: #898e93;
+            --global-body-font-family: Arial, sans-serif;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+    <!-- Include the MapVibe Jobs JavaScript -->
+    <script src="mapvibe-jobs.js"></script>
+</head>
+<body>
+    <h1>MapVibe Jobs Demo</h1>
+    
+    <!-- This is the container that will be populated with job listings -->
+    <div id="mapvibe-recent-jobs-container">Loading Recent Jobs...</div>
+    
+    <p>This demo shows how the MapVibe Jobs JavaScript works to display job listings.</p>
+    
+    <h2>How to Add This to Your WordPress Site</h2>
+    <ol>
+        <li>Upload the <code>mapvibe-jobs.js</code> file to your WordPress theme directory or a custom plugin directory.</li>
+        <li>Enqueue the script in your WordPress theme's <code>functions.php</code> file using the following code:</li>
+    </ol>
+    
+    <pre>
+function enqueue_mapvibe_jobs_script() {
+    wp_enqueue_script('mapvibe-jobs', get_template_directory_uri() . '/mapvibe-jobs.js', array(), '1.0.0', true);
+}
+add_action('wp_enqueue_scripts', 'enqueue_mapvibe_jobs_script');
+    </pre>
+    
+    <p>Alternatively, you can add the script directly to your WordPress page using a custom HTML block or by editing your theme's footer.php file.</p>
+</body>
+</html>

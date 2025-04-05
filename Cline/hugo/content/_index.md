@@ -105,7 +105,12 @@ testimonials:
 <!-- 7. Primary Call to Action Section -->
 ## Primary Call to Action Headline Placeholder
 <!-- Using existing CTA shortcode, might need parameter adjustments -->
-{{/* {{< cta >}} */}} <!-- Temporarily commented out for debugging -->
+{{< cta 
+    headline="Ready to Get Started?" 
+    sub_headline="Risk Reducer Text Placeholder" 
+    primary_button_text="Primary CTA Btn Placeholder" 
+    primary_button_url="#" 
+>}}
 
 <!-- 8. FAQ Section -->
 ## FAQ Headline Placeholder
